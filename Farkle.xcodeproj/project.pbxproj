@@ -14,6 +14,7 @@
 		34EF527F19E5B877004E0883 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 34EF527E19E5B877004E0883 /* Images.xcassets */; };
 		34EF528219E5B877004E0883 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 34EF528019E5B877004E0883 /* LaunchScreen.xib */; };
 		34EF528E19E5B877004E0883 /* FarkleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EF528D19E5B877004E0883 /* FarkleTests.m */; };
+		34EF529919E5B8D0004E0883 /* DieLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EF529819E5B8D0004E0883 /* DieLabel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +41,8 @@
 		34EF528719E5B877004E0883 /* FarkleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FarkleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		34EF528C19E5B877004E0883 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		34EF528D19E5B877004E0883 /* FarkleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FarkleTests.m; sourceTree = "<group>"; };
+		34EF529719E5B8D0004E0883 /* DieLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DieLabel.h; sourceTree = "<group>"; };
+		34EF529819E5B8D0004E0883 /* DieLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DieLabel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +88,8 @@
 				34EF527619E5B877004E0883 /* AppDelegate.m */,
 				34EF527819E5B877004E0883 /* ViewController.h */,
 				34EF527919E5B877004E0883 /* ViewController.m */,
+				34EF529719E5B8D0004E0883 /* DieLabel.h */,
+				34EF529819E5B8D0004E0883 /* DieLabel.m */,
 				34EF527B19E5B877004E0883 /* Main.storyboard */,
 				34EF527E19E5B877004E0883 /* Images.xcassets */,
 				34EF528019E5B877004E0883 /* LaunchScreen.xib */,
@@ -222,6 +227,7 @@
 				34EF527A19E5B877004E0883 /* ViewController.m in Sources */,
 				34EF527719E5B877004E0883 /* AppDelegate.m in Sources */,
 				34EF527419E5B877004E0883 /* main.m in Sources */,
+				34EF529919E5B8D0004E0883 /* DieLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
