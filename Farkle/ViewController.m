@@ -13,7 +13,7 @@
 
 @property (strong, nonatomic) IBOutletCollection(DieLabel) NSArray *dieOutletCollection;
 @property (strong, nonatomic) NSMutableArray *dice;
-@property (weak, nonatomic) IBOutlet UILabel *scoreLabel;
+@property (weak, nonatomic) IBOutlet UILabel *userScore;
 
 @end
 
@@ -42,6 +42,13 @@
 -(void)addSelectedDieToDice:(DieLabel *)die
 {
     [self.dice addObject:die];
+}
+
+-(void)removeSelectedDieToDice:(DieLabel *)die
+{
+    if ([self.dice containsObject:die]) {
+        [self.dice removeObject:die];
+    }
 }
 
 - (void)didReceiveMemoryWarning {

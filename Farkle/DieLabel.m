@@ -8,14 +8,30 @@
 
 #import "DieLabel.h"
 
-@implementation DieLabel
+@interface DieLabel ()
 
+@property BOOL selected;
+
+@end
+
+@implementation DieLabel
 
 -(IBAction)onTapped:(UITapGestureRecognizer *)tapGesture
 {
-    //[self roll];
-    self.backgroundColor = [UIColor greenColor];
-    [self.delegate addSelectedDieToDice:self];
+    UIColor *blueColor = [UIColor colorWithRed:(27.0/255.0) green:(228.0/255.0) blue:(255.0/255.0) alpha:1.0];
+    UIColor *purpleColor = [UIColor colorWithRed:(76.0/255.0) green:(54.0/255.0) blue:(107.0/255.0) alpha:1.0];
+
+    if (self.selected == NO) {
+        [self.delegate addSelectedDieToDice:self];
+        self.backgroundColor = purpleColor;
+        self.selected = YES;
+    }
+    else
+    {
+        [self.delegate removeSelectedDieToDice:self];
+        self.selected = NO;
+        self.backgroundColor = blueColor;
+    }
 }
 
 -(void)roll

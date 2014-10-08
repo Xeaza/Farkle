@@ -229,7 +229,7 @@
                         </variation>
                     </view>
                     <connections>
-                        <outlet property="scoreLabel" destination="czG-Ia-i0X" id="iGK-vQ-vch"/>
+                        <outlet property="userScore" destination="czG-Ia-i0X" id="jU6-fN-q6X"/>
                         <outletCollection property="dieOutletCollection" destination="k3v-Cm-WcI" id="tvI-Al-O0d"/>
                         <outletCollection property="dieOutletCollection" destination="4eP-1G-fzZ" id="7TT-dk-GSR"/>
                         <outletCollection property="dieOutletCollection" destination="40i-pb-jCT" id="NjS-21-a8N"/>

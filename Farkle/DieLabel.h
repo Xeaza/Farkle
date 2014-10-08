@@ -11,6 +11,7 @@
 @protocol DieLabelDelegate
 
 - (void)addSelectedDieToDice:(id)die;
+- (void)removeSelectedDieToDice:(id)die;
 
 @end
 
