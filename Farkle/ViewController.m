@@ -218,7 +218,7 @@
         bankScore = 1000;
     }
 
-    self.bankedScore.text = @(bankScore).description;
+    self.bankedScore.text = [NSString stringWithFormat:@"Banked Score: %@", @(bankScore).description];
 }
 
 - (void)incrementSelectedScoringDice:(NSInteger)numberOfNewSelectedDice
