@@ -12,6 +12,7 @@
 
 - (void)addSelectedDieToDice:(id)die;
 - (void)removeSelectedDieToDice:(id)die;
+- (void)generateUserScore:(id)selectedDie;
 
 @end
 

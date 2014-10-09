@@ -25,6 +25,7 @@
         [self.delegate addSelectedDieToDice:self];
         self.backgroundColor = purpleColor;
         self.selected = YES;
+        [self.delegate generateUserScore:self];
     }
     else
     {
