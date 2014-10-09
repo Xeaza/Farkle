@@ -13,12 +13,14 @@
 - (void)addSelectedDieToDice:(id)die;
 - (void)removeSelectedDieToDice:(id)die;
 - (void)generateUserScore:(id)selectedDie;
+- (void)clearBoard;
 
 @end
 
 @interface DieLabel : UILabel
 
 -(void)roll;
+@property BOOL selected;
 
 @property id<DieLabelDelegate> delegate;
 
