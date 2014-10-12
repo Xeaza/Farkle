@@ -11,7 +11,7 @@
 @protocol DieLabelDelegate
 
 - (void)addSelectedDieToDice:(id)die;
-- (void)removeSelectedDieToDice:(id)die;
+- (void)removeDieFromSelectedDice:(id)die;
 - (void)generateUserScore:(id)selectedDie;
 - (void)clearBoard;
 

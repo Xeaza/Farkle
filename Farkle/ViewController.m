@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "DieLabel.h"
 
-@interface ViewController () <DieLabelDelegate>
+@interface ViewController () <DieLabelDelegate, UIAlertViewDelegate>
 
 @property (strong, nonatomic) IBOutletCollection(DieLabel) NSArray *dieOutletCollection;
 @property (strong, nonatomic) NSMutableArray *dice;
@@ -17,7 +17,10 @@
 @property (weak, nonatomic) IBOutlet UILabel *bankedScore;
 @property NSInteger selectedScoreingDice;
 
-@property NSMutableArray *numberOfDieScoresSelected;
+@property NSMutableArray *arrayOfSelectedDiceValues;
+@property NSMutableArray *arrayOfDiceValuesFromSecondRoll;
+
+@property NSInteger numberOfScoringDiceSelected;
 
 @property BOOL allDiceSelected;
 
@@ -29,7 +32,7 @@
 {
     [super viewDidLoad];
     self.dice = [[NSMutableArray alloc] init];
-    self.numberOfDieScoresSelected = [[NSMutableArray alloc] initWithObjects:@0, @0, @0, @0, @0, @0, nil];
+    self.arrayOfSelectedDiceValues = [[NSMutableArray alloc] initWithObjects:@0, @0, @0, @0, @0, @0, nil];
     for (DieLabel *dieLabel in self.dieOutletCollection)
     {
         dieLabel.delegate = self;
@@ -38,15 +41,298 @@
 
 - (IBAction)onRollButtonPressed:(id)sender
 {
-    for (DieLabel *dieLabel in self.dieOutletCollection)
+    if ([self getNumberOfNonScoringDiceSelected] > 0)
     {
-        if (![self.dice containsObject:dieLabel]) {
-            [dieLabel roll];
+        // add an alert view
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"You can't roll dice with non scoring dice held!"
+                                                            message:nil
+                                                           delegate:self
+                                                  cancelButtonTitle:@"OK"
+                                                  otherButtonTitles:nil, nil];
+        alertView.delegate = self;
+        [alertView show];
+    }
+    else
+    {
+        self.arrayOfDiceValuesFromSecondRoll = [[NSMutableArray alloc] init];
+
+        for (DieLabel *dieLabel in self.dieOutletCollection)
+        {
+            if (![self.dice containsObject:dieLabel]) {
+                [dieLabel roll];
+                // Fill array of values
+                [self.arrayOfDiceValuesFromSecondRoll addObject:dieLabel.text];
+            }
         }
+        [self checkForFarkle];
+    }
+}
+
+- (void)checkForFarkle
+{
+    int onesScore = 0;
+    int twosScore = 0;
+    int threesScore = 0;
+    int foursScore = 0;
+    int fivesScore = 0;
+    int sixesScore = 0;
+
+    for (int i = 0; i < self.arrayOfDiceValuesFromSecondRoll.count; i++)
+    {
+        NSLog(@"%@", self.arrayOfDiceValuesFromSecondRoll[i]);
+        //NSLog(@"%ld", (long)[dieValue integerValue]);
+        NSInteger number = [self.arrayOfDiceValuesFromSecondRoll[i] integerValue];
+        if (number == 1)
+        {
+            onesScore++;
+        }
+        else if (number == 5)
+        {
+            fivesScore++;
+        }
+        else if (number == 2)
+        {
+            twosScore++;
+        }
+        else if (number == 3)
+        {
+            threesScore++;
+        }
+        else if (number == 4)
+        {
+            foursScore++;
+        }
+        else if (number == 6)
+        {
+            sixesScore++;
+        }
+    }
+    if (twosScore > 2 || threesScore > 2 || foursScore > 2 || sixesScore > 2 || onesScore > 0 || fivesScore > 0) {
+        // NO farkle
+    }
+//    else if (twosScore > 2 )
+//    {
+//        NSLog(@"Hot dice!");
+//    }
+    else
+    {
+        self.bankedScore.text = @"Banked Score: 0";
+        [self clearBoard];
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"FARKLE!"
+                                                           message:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:nil
+                                                 otherButtonTitles:nil, nil];
+        alertView.delegate = self;
+        [alertView show];
+
+        [UIView animateWithDuration:2.0 animations:^{
+            [alertView dismissWithClickedButtonIndex:0 animated:YES];
+        }];
     }
 }
 
 - (void)generateUserScore:(DieLabel *)selectedDie
+{
+    NSInteger bankScore = 0;
+
+    [self populateArraysOfSelectedDiceValues:self.arrayOfSelectedDiceValues selectedDie:selectedDie.text.integerValue];
+
+    [self checkIfAllDiceAreSelected];
+
+    int onesScore = 0;
+    int twosScore = 0;
+    int threesScore = 0;
+    int foursScore = 0;
+    int fivesScore = 0;
+    int sixesScore = 0;
+
+    self.numberOfScoringDiceSelected = 0;
+
+    for (int i = 0; i < self.arrayOfSelectedDiceValues.count; i++)
+    {
+        switch (i)
+        {
+            case 0:
+                if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 1)
+                {
+                    onesScore = onesScore + 100;
+                    self.numberOfScoringDiceSelected ++;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 2)
+                {
+                    onesScore = onesScore + 200;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 2;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 3)
+                {
+                    onesScore = onesScore + 1000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 3;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 4)
+                {
+                    onesScore = onesScore + 2000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 5)
+                {
+                    onesScore = onesScore + 4000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 6)
+                {
+                    onesScore = onesScore + 8000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 6;
+                }
+                break;
+            case 1:
+                if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 3)
+                {
+                    twosScore = twosScore + 200;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 3;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 4)
+                {
+                    twosScore = twosScore + 400;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 5)
+                {
+                    twosScore = twosScore + 800;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 5;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 6)
+                {
+                    twosScore = twosScore + 1600;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 6;
+                }
+                break;
+            case 2:
+                if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 3)
+                {
+                    threesScore = threesScore + 300;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 3;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 4)
+                {
+                    threesScore = threesScore + 600;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 5)
+                {
+                    threesScore = threesScore + 1200;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 5;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 6)
+                {
+                    threesScore = threesScore + 2400;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 6;
+                }
+                break;
+            case 3:
+                if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 3)
+                {
+                    foursScore = foursScore + 400;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 3;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 4)
+                {
+                    foursScore = foursScore + 800;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 5)
+                {
+                    foursScore = foursScore + 1600;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 5;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 6)
+                {
+                    foursScore = foursScore + 3200;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 6;
+                }
+                break;
+            case 4:
+                if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 1)
+                {
+                    fivesScore = fivesScore + 50;
+                    self.numberOfScoringDiceSelected ++;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 2)
+                {
+                    fivesScore = fivesScore + 100;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 2;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 3)
+                {
+                    fivesScore = fivesScore + 500;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 3;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 4)
+                {
+                    fivesScore = fivesScore + 1000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 5)
+                {
+                    fivesScore = fivesScore + 2000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 5;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 6)
+                {
+                    fivesScore = fivesScore + 4000;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 6;
+                }
+                break;
+            case 5:
+                if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 3)
+                {
+                    sixesScore = sixesScore + 600;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 3;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 4)
+                {
+                    sixesScore = sixesScore + 1200;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 4;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 5)
+                {
+                    sixesScore = sixesScore + 2400;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 5;
+                }
+                else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 6)
+                {
+                    sixesScore = sixesScore + 4800;
+                    self.numberOfScoringDiceSelected = self.numberOfScoringDiceSelected + 6;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (self.numberOfScoringDiceSelected == 6)
+    {
+        //NSLog(@"Hot Dice!");
+    }
+
+    bankScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixesScore;
+
+    if ([self checkForThreePairs])
+    {
+        bankScore = 1000;
+    }
+    
+    self.bankedScore.text = [NSString stringWithFormat:@"Banked Score: %@", @(bankScore).description];
+
+    NSString *scoreInBank = [self getStringOfBankedScore];
+
+    self.userScore.text   = [NSString stringWithFormat:@"Total Score: %@", scoreInBank];
+    //self.bankedScore.text = @"Banked Score: 0";
+
+    //[self clearBoard];
+}
+
+- (void)populateArraysOfSelectedDiceValues: (NSMutableArray *)arrayToFill selectedDie:(NSInteger)numberOnDieSelected
 {
     int numberOfSelectedOnes   = 0;
     int numberOfSelectedTwos   = 0;
@@ -55,185 +341,41 @@
     int numberOfSelectedFives  = 0;
     int numberOfSelectedSixes  = 0;
 
-    NSInteger bankScore = 0;
-
     // Add the number of selected die at the index representing each die in the array self.selecedDie
-    switch (selectedDie.text.integerValue)
+    switch (numberOnDieSelected)
     {
         case 1:
-            numberOfSelectedOnes = [[self.numberOfDieScoresSelected objectAtIndex:0] intValue];
+            numberOfSelectedOnes = [[arrayToFill objectAtIndex:0] intValue];
             numberOfSelectedOnes = numberOfSelectedOnes + 1;
-            [self.numberOfDieScoresSelected replaceObjectAtIndex:0 withObject:[NSNumber numberWithInt:numberOfSelectedOnes]];
+            [arrayToFill replaceObjectAtIndex:0 withObject:[NSNumber numberWithInt:numberOfSelectedOnes]];
             break;
         case 2:
-            numberOfSelectedTwos = [[self.numberOfDieScoresSelected objectAtIndex:1] intValue];
+            numberOfSelectedTwos = [[arrayToFill objectAtIndex:1] intValue];
             numberOfSelectedTwos = numberOfSelectedTwos + 1;
-            [self.numberOfDieScoresSelected replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:numberOfSelectedTwos]];
+            [arrayToFill replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:numberOfSelectedTwos]];
             break;
         case 3:
-            numberOfSelectedThrees = [[self.numberOfDieScoresSelected objectAtIndex:2] intValue];
+            numberOfSelectedThrees = [[arrayToFill objectAtIndex:2] intValue];
             numberOfSelectedThrees = numberOfSelectedThrees + 1;
-            [self.numberOfDieScoresSelected replaceObjectAtIndex:2 withObject:[NSNumber numberWithInt:numberOfSelectedThrees]];
+            [arrayToFill replaceObjectAtIndex:2 withObject:[NSNumber numberWithInt:numberOfSelectedThrees]];
             break;
         case 4:
-            numberOfSelectedFours = [[self.numberOfDieScoresSelected objectAtIndex:3] intValue];
+            numberOfSelectedFours = [[arrayToFill objectAtIndex:3] intValue];
             numberOfSelectedFours = numberOfSelectedFours + 1;
-            [self.numberOfDieScoresSelected replaceObjectAtIndex:3 withObject:[NSNumber numberWithInt:numberOfSelectedFours]];
+            [arrayToFill replaceObjectAtIndex:3 withObject:[NSNumber numberWithInt:numberOfSelectedFours]];
             break;
         case 5:
-            numberOfSelectedFives = [[self.numberOfDieScoresSelected objectAtIndex:4] intValue];
+            numberOfSelectedFives = [[arrayToFill objectAtIndex:4] intValue];
             numberOfSelectedFives = numberOfSelectedFives + 1;
-            [self.numberOfDieScoresSelected replaceObjectAtIndex:4 withObject:[NSNumber numberWithInt:numberOfSelectedFives]];
+            [arrayToFill replaceObjectAtIndex:4 withObject:[NSNumber numberWithInt:numberOfSelectedFives]];
             break;
         case 6:
-            numberOfSelectedSixes = [[self.numberOfDieScoresSelected objectAtIndex:5] intValue];
+            numberOfSelectedSixes = [[arrayToFill objectAtIndex:5] intValue];
             numberOfSelectedSixes = numberOfSelectedSixes + 1;
-            [self.numberOfDieScoresSelected replaceObjectAtIndex:5 withObject:[NSNumber numberWithInt:numberOfSelectedSixes]];
+            [arrayToFill replaceObjectAtIndex:5 withObject:[NSNumber numberWithInt:numberOfSelectedSixes]];
             break;
         default:
             break;
-    }
-
-    [self checkIfAllDiceAreSelected];
-
-    if (!self.allDiceSelected)
-    {
-        int threePairCounter = 0;
-
-        int onesScore = 0;
-        int twosScore = 0;
-        int threesScore = 0;
-        int foursScore = 0;
-        int fivesScore = 0;
-        int sixesScore = 0;
-
-        for (int i = 0; i < self.numberOfDieScoresSelected.count; i++)
-        {
-            switch (i)
-            {
-                case 0:
-                    if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 1) {
-                        onesScore = 100;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 2) {
-                        onesScore = 200;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 3) {
-                        onesScore = 1000;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 4) {
-                        onesScore = 2000;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 5) {
-                        onesScore = 4000;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 6) {
-                        onesScore = 8000;
-                    }
-                    break;
-                case 1:
-                    if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 3) {
-                        twosScore = 200;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 4) {
-                        twosScore = 400;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 5) {
-                        twosScore = 800;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 6) {
-                        twosScore = 1600;
-                    }
-                    break;
-                case 2:
-                    if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 3) {
-                        threesScore = 300;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 4) {
-                        threesScore = 600;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 5) {
-                        threesScore = 1200;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 6) {
-                        threesScore = 2400;
-                    }
-                    break;
-                case 3:
-                    if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 3) {
-                        foursScore = 400;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 4) {
-                        foursScore = 800;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 5) {
-                        foursScore = 1600;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 6) {
-                        foursScore = 3200;
-                    }
-                    break;
-                case 4:
-                    if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 1) {
-                        fivesScore = 50;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 2) {
-                        fivesScore = 100;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 3) {
-                        fivesScore = 500;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 4) {
-                        fivesScore = 1000;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 5) {
-                        fivesScore = 2000;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 6) {
-                        fivesScore = 4000;
-                    }
-                    break;
-                case 5:
-                    if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 3) {
-                        sixesScore = 600;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 4) {
-                        sixesScore = 1200;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 5) {
-                        sixesScore = 2400;
-                    }
-                    else if ([[self.numberOfDieScoresSelected objectAtIndex:i] integerValue] == 6) {
-                        sixesScore = 4800;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        bankScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixesScore;
-        // Check for three pairs
-        for (int y = 0; y < self.numberOfDieScoresSelected.count; y++) {
-            if ([[self.numberOfDieScoresSelected objectAtIndex:y] integerValue] == 2) {
-                threePairCounter++;
-            }
-        }
-        
-        if (threePairCounter == 3) {
-            bankScore = 1000;
-        }
-        
-        self.bankedScore.text = [NSString stringWithFormat:@"Banked Score: %@", @(bankScore).description];
-    }
-    else
-    {
-        NSString *scoreInBank = [self getStringOfBankedScore];
-
-        self.userScore.text   = [NSString stringWithFormat:@"Total Score: %@", scoreInBank];
-        self.bankedScore.text = @"Banked Score: 0";
-
-        [self clearBoard];
     }
 }
 
@@ -243,10 +385,12 @@
     NSMutableArray *substrings = [[NSMutableArray alloc] init];
     NSScanner *scanner = [NSScanner scannerWithString:self.bankedScore.text];
     [scanner scanUpToString:@":" intoString:nil]; // Scan all characters before #
-    while(![scanner isAtEnd]) {
+    while(![scanner isAtEnd])
+    {
         NSString *substring = nil;
         [scanner scanString:@":" intoString:nil]; // Scan the # character
-        if([scanner scanUpToString:@" " intoString:&substring]) {
+        if([scanner scanUpToString:@" " intoString:&substring])
+        {
             // If the space immediately followed the #, this will be skipped
             [substrings addObject:substring];
         }
@@ -254,16 +398,50 @@
     return [substrings objectAtIndex:0];
 }
 
+- (NSInteger)numberOfSelectedDice
+{
+    int selectedDieCounter = 0;
+    for (DieLabel *die in self.dieOutletCollection)
+    {
+        if (die.selected)
+        {
+            selectedDieCounter ++;
+        }
+    }
+    return selectedDieCounter;
+}
+
+- (BOOL)checkForThreePairs
+{
+    int threePairCounter = 0;
+    // Check for three pairs
+    for (int y = 0; y < self.arrayOfSelectedDiceValues.count; y++)
+    {
+        if ([[self.arrayOfSelectedDiceValues objectAtIndex:y] integerValue] == 2)
+        {
+            threePairCounter++;
+        }
+    }
+    BOOL thereAreThreePairs = NO;
+    if (threePairCounter == 3) {
+        thereAreThreePairs = YES;
+    }
+    return thereAreThreePairs;
+}
+
 - (void)checkIfAllDiceAreSelected
 {
     long diceSelectedCounter = 0;
 
-    for (NSNumber *selected in self.numberOfDieScoresSelected) {
-        if (selected.integerValue > 0 ) {
+    for (NSNumber *selected in self.arrayOfSelectedDiceValues)
+    {
+        if (selected.integerValue > 0 )
+        {
             diceSelectedCounter = diceSelectedCounter + selected.integerValue;
         }
     }
-    if (diceSelectedCounter == 6) {
+    if (diceSelectedCounter == 6)
+    {
         self.allDiceSelected = YES;
     }
     else
@@ -272,13 +450,35 @@
     }
 }
 
+- (int)getNumberOfNonScoringDiceSelected
+{
+    int nonScoringDiceCounter = 0;
+
+    for (int i = 0; i < self.arrayOfSelectedDiceValues.count; i++)
+    {
+        if (i != 0 && i != 4)
+        {
+            if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 2)
+            {
+                nonScoringDiceCounter = nonScoringDiceCounter + 2;
+            }
+            else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 1)
+            {
+                nonScoringDiceCounter++;
+            }
+        }
+    }
+    return nonScoringDiceCounter;
+}
+
 - (void)clearBoard
 {
     UIColor *blueColor = [UIColor colorWithRed:(27.0/255.0) green:(228.0/255.0) blue:(255.0/255.0) alpha:1.0];
 
     for (DieLabel *die in self.dieOutletCollection)
     {
-        [self removeSelectedDieToDice:die];
+        [self removeDieFromSelectedDice:die];
+
         die.selected = NO;
         die.backgroundColor = blueColor;
     }
@@ -294,12 +494,31 @@
     [self.dice addObject:die];
 }
 
--(void)removeSelectedDieToDice:(DieLabel *)die
+-(void)removeDieFromSelectedDice:(DieLabel *)die
 {
-    if ([self.dice containsObject:die]) {
+    UIColor *blueColor = [UIColor colorWithRed:(27.0/255.0) green:(228.0/255.0) blue:(255.0/255.0) alpha:1.0];
+
+    if (die.selected)
+    {
+        int index = die.text.intValue-1;
+        if ([self.arrayOfSelectedDiceValues objectAtIndex:index] > 0)
+        {
+            // Decrement amount of selected items at the respective index in the array that keeps track of how many of each number
+            // has been selected
+            int numberOfSelects = [[self.arrayOfSelectedDiceValues objectAtIndex:index] intValue] - 1;
+            [self.arrayOfSelectedDiceValues replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:numberOfSelects]];
+            // TODO decrement the score if a scoreing die is selected and then unselected
+        }
+    }
+    NSLog(@"%@", self.arrayOfSelectedDiceValues);
+
+    die.selected = NO;
+    die.backgroundColor = blueColor;
+
+    if ([self.dice containsObject:die])
+    {
         [self.dice removeObject:die];
     }
-    
 }
 
 - (void)didReceiveMemoryWarning {

@@ -28,8 +28,8 @@
         }
         else
         {
-            [self.delegate removeSelectedDieToDice:self];
-            [self.delegate clearBoard];
+            [self.delegate removeDieFromSelectedDice:self];
+            //[self.delegate clearBoard];
             //self.selected = NO;
             //self.backgroundColor = blueColor;
         }
