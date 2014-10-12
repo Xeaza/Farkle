@@ -13,14 +13,19 @@
 
 @property (strong, nonatomic) IBOutletCollection(DieLabel) NSArray *dieOutletCollection;
 @property (strong, nonatomic) NSMutableArray *dice;
-@property (weak, nonatomic) IBOutlet UILabel *userScore;
-@property (weak, nonatomic) IBOutlet UILabel *bankedScore;
+@property (weak, nonatomic) IBOutlet UILabel *playerOneTotalScoreLabel;
+@property (weak, nonatomic) IBOutlet UILabel *playerOneBankedScoreLabel;
+@property (weak, nonatomic) IBOutlet UILabel *currentUser;
 @property NSInteger selectedScoreingDice;
+
+@property (weak, nonatomic) IBOutlet UILabel *playerTwoTotalScoreLabel;
+@property (weak, nonatomic) IBOutlet UILabel *playerTwoBankedScoreLabel;
 
 @property NSMutableArray *arrayOfSelectedDiceValues;
 @property NSMutableArray *arrayOfDiceValuesFromSecondRoll;
 
 @property NSInteger numberOfScoringDiceSelected;
+@property BOOL isPlayerOne;
 
 @property BOOL allDiceSelected;
 
@@ -37,6 +42,26 @@
     {
         dieLabel.delegate = self;
     }
+    [self initalizeGame];
+}
+
+- (void)initalizeGame
+{
+    // Make sure the game begins with Player One.
+    // Hide all the labels assoicated with Player Two
+    // Make sure all the scores start as zero
+    self.currentUser.text = @"Player One";
+    self.isPlayerOne = YES;
+    self.playerTwoBankedScoreLabel.hidden = YES;
+    self.playerTwoTotalScoreLabel.hidden = YES;
+
+    self.playerOneTotalScoreLabel.hidden = NO;
+    self.playerOneBankedScoreLabel.hidden = NO;
+
+    self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
+    self.playerOneTotalScoreLabel.text = @"Total Score: 0";
+
+    // TODO - get labels to correctly hide when initlizing the game. You can see both of them... :/
 }
 
 - (IBAction)onRollButtonPressed:(id)sender
@@ -54,33 +79,93 @@
     }
     else
     {
-        self.arrayOfDiceValuesFromSecondRoll = [[NSMutableArray alloc] init];
-
-        for (DieLabel *dieLabel in self.dieOutletCollection)
-        {
-            if (![self.dice containsObject:dieLabel]) {
-                [dieLabel roll];
-                // Fill array of values
-                [self.arrayOfDiceValuesFromSecondRoll addObject:dieLabel.text];
-            }
-        }
+        [self rollDice];
         [self checkForFarkle];
+    }
+}
+
+- (IBAction)onKeepScoreButtonPressed:(id)sender
+{
+    [self clearBoard];
+    NSInteger bankedScore = 0;
+    NSInteger totalScore = 0;
+    if (self.isPlayerOne)
+    {
+        bankedScore = [[self getStringOfScoreFromLabel:self.playerOneBankedScoreLabel.text] integerValue];
+        totalScore = [[self getStringOfScoreFromLabel:self.playerOneTotalScoreLabel.text] integerValue];
+        NSInteger updatedScore = totalScore + bankedScore;
+        self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
+        self.playerOneTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
+    }
+    else
+    {
+        bankedScore = [[self getStringOfScoreFromLabel:self.playerTwoBankedScoreLabel.text] integerValue];
+        totalScore = [[self getStringOfScoreFromLabel:self.playerTwoTotalScoreLabel.text] integerValue];
+        NSInteger updatedScore = totalScore + bankedScore;
+        self.playerTwoBankedScoreLabel.text = @"Banked Score: 0";
+        self.playerTwoTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
+    }
+
+    if (totalScore > 999)
+    {
+        if (self.isPlayerOne)
+        {
+            [self userWins:@"Player One Wins!"];
+        }
+        else
+        {
+            [self userWins:@"Player Two Wins!"];
+        }
+    }
+    else
+    {
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Next Player's Turn"
+                                                            message:nil
+                                                           delegate:self
+                                                  cancelButtonTitle:nil
+                                                  otherButtonTitles:@"Roll", nil];
+        alertView.delegate = self;
+        alertView.tag = 1;
+        [alertView show];
+    }
+}
+
+- (void)userWins: (NSString *)winningUser
+{
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:winningUser
+                                                        message:nil
+                                                       delegate:self
+                                              cancelButtonTitle:nil
+                                              otherButtonTitles:@"New Game", nil];
+    alertView.delegate = self;
+    alertView.tag = 2;
+}
+
+- (void)rollDice
+{
+    self.arrayOfDiceValuesFromSecondRoll = [[NSMutableArray alloc] init];
+
+    for (DieLabel *dieLabel in self.dieOutletCollection)
+    {
+        if (![self.dice containsObject:dieLabel]) {
+            [dieLabel roll];
+            // Fill array of values
+            [self.arrayOfDiceValuesFromSecondRoll addObject:dieLabel.text];
+        }
     }
 }
 
 - (void)checkForFarkle
 {
-    int onesScore = 0;
-    int twosScore = 0;
+    int onesScore   = 0;
+    int twosScore   = 0;
     int threesScore = 0;
-    int foursScore = 0;
-    int fivesScore = 0;
-    int sixesScore = 0;
+    int foursScore  = 0;
+    int fivesScore  = 0;
+    int sixesScore  = 0;
 
     for (int i = 0; i < self.arrayOfDiceValuesFromSecondRoll.count; i++)
     {
-        NSLog(@"%@", self.arrayOfDiceValuesFromSecondRoll[i]);
-        //NSLog(@"%ld", (long)[dieValue integerValue]);
         NSInteger number = [self.arrayOfDiceValuesFromSecondRoll[i] integerValue];
         if (number == 1)
         {
@@ -110,25 +195,25 @@
     if (twosScore > 2 || threesScore > 2 || foursScore > 2 || sixesScore > 2 || onesScore > 0 || fivesScore > 0) {
         // NO farkle
     }
-//    else if (twosScore > 2 )
-//    {
-//        NSLog(@"Hot dice!");
-//    }
     else
     {
-        self.bankedScore.text = @"Banked Score: 0";
+        if (self.isPlayerOne)
+        {
+            self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
+        }
+        else {
+            self.playerTwoBankedScoreLabel.text = @"Banked Score: 0";
+        }
+
         [self clearBoard];
         UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"FARKLE!"
                                                            message:nil
                                                           delegate:self
                                                  cancelButtonTitle:nil
-                                                 otherButtonTitles:nil, nil];
+                                                 otherButtonTitles:@"Next Player Roll", nil];
         alertView.delegate = self;
+        alertView.tag = 1;
         [alertView show];
-
-        [UIView animateWithDuration:2.0 animations:^{
-            [alertView dismissWithClickedButtonIndex:0 animated:YES];
-        }];
     }
 }
 
@@ -140,12 +225,12 @@
 
     [self checkIfAllDiceAreSelected];
 
-    int onesScore = 0;
-    int twosScore = 0;
+    int onesScore   = 0;
+    int twosScore   = 0;
     int threesScore = 0;
-    int foursScore = 0;
-    int fivesScore = 0;
-    int sixesScore = 0;
+    int foursScore  = 0;
+    int fivesScore  = 0;
+    int sixesScore  = 0;
 
     self.numberOfScoringDiceSelected = 0;
 
@@ -312,7 +397,16 @@
 
     if (self.numberOfScoringDiceSelected == 6)
     {
-        //NSLog(@"Hot Dice!");
+        NSLog(@"Hot Dice!");
+        // add an alert view
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Hot Dice!"
+                                                            message:nil
+                                                           delegate:self
+                                                  cancelButtonTitle:nil
+                                                  otherButtonTitles:@"Roll Again", nil];
+        alertView.tag = 1;
+        alertView.delegate = self;
+        [alertView show];
     }
 
     bankScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixesScore;
@@ -321,15 +415,15 @@
     {
         bankScore = 1000;
     }
-    
-    self.bankedScore.text = [NSString stringWithFormat:@"Banked Score: %@", @(bankScore).description];
 
-    NSString *scoreInBank = [self getStringOfBankedScore];
-
-    self.userScore.text   = [NSString stringWithFormat:@"Total Score: %@", scoreInBank];
-    //self.bankedScore.text = @"Banked Score: 0";
-
-    //[self clearBoard];
+    if (self.isPlayerOne)
+    {
+        self.playerOneBankedScoreLabel.text = [NSString stringWithFormat:@"Banked Score: %@", @(bankScore).description];
+    }
+    else
+    {
+        self.playerTwoBankedScoreLabel.text = [NSString stringWithFormat:@"Banked Score: %@", @(bankScore).description];
+    }
 }
 
 - (void)populateArraysOfSelectedDiceValues: (NSMutableArray *)arrayToFill selectedDie:(NSInteger)numberOnDieSelected
@@ -379,11 +473,11 @@
     }
 }
 
-- (NSString *)getStringOfBankedScore
+- (NSString *)getStringOfScoreFromLabel: (NSString *)labelText
 {
     // Scan string to find the : and take the value after it (the score)
     NSMutableArray *substrings = [[NSMutableArray alloc] init];
-    NSScanner *scanner = [NSScanner scannerWithString:self.bankedScore.text];
+    NSScanner *scanner = [NSScanner scannerWithString:labelText];
     [scanner scanUpToString:@":" intoString:nil]; // Scan all characters before #
     while(![scanner isAtEnd])
     {
@@ -521,7 +615,43 @@
     }
 }
 
-- (void)didReceiveMemoryWarning {
+- (void)switchPlayer
+{
+    if ([self.currentUser.text isEqualToString:@"Player One"])
+    {
+        self.currentUser.text = @"Player Two";
+        self.isPlayerOne = NO;
+        self.playerOneBankedScoreLabel.hidden = YES;
+        self.playerOneTotalScoreLabel.hidden = YES;
+        self.playerTwoBankedScoreLabel.hidden = NO;
+        self.playerTwoTotalScoreLabel.hidden = NO;
+    }
+    else
+    {
+        self.currentUser.text = @"Player One";
+        self.isPlayerOne = YES;
+        self.playerOneBankedScoreLabel.hidden = NO;
+        self.playerOneTotalScoreLabel.hidden = NO;
+        self.playerTwoBankedScoreLabel.hidden = YES;
+        self.playerTwoTotalScoreLabel.hidden = YES;
+    }
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 1)
+    {
+        [self switchPlayer];
+        [self rollDice];
+    }
+    else if (alertView.tag == 2)
+    {
+        [self initalizeGame];
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
