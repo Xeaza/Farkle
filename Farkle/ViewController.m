@@ -55,14 +55,19 @@
 {
     if ([self getNumberOfNonScoringDiceSelected] > 0)
     {
-        // add an alert view
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"You can't roll dice with non scoring dice held!"
-                                                            message:nil
-                                                           delegate:self
-                                                  cancelButtonTitle:@"OK"
-                                                  otherButtonTitles:nil, nil];
-        alertView.delegate = self;
-        [alertView show];
+        [self displayAlertView:@"You can't roll dice with non scoring dice held!"
+                       message:nil
+                  cancelButton:@"OK"
+                   otherButton:nil
+                           tag:0];
+    }
+    else if (self.numberOfDiceSelected == 0)
+    {
+        [self displayAlertView:@"You can't roll dice without holding any scoring dice!"
+                       message:nil
+                  cancelButton:@"OK"
+                   otherButton:nil
+                           tag:0];
     }
     else
     {
@@ -97,6 +102,7 @@
 
         if (totalScore > 9999)
         {
+            // TODO Make sure winning actually happens...
             if (self.isPlayerOne)
             {
                 [self userWins:@"Player One Wins!"];
@@ -108,26 +114,21 @@
         }
         else
         {
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Next Player's Turn"
-                                                                message:nil
-                                                               delegate:self
-                                                      cancelButtonTitle:nil
-                                                      otherButtonTitles:@"Roll", nil];
-            alertView.delegate = self;
-            alertView.tag = 1;
-            [alertView show];
+            [self displayAlertView:@"Next Player's Turn"
+                           message:nil
+                      cancelButton:nil
+                       otherButton:@"Roll"
+                               tag:1];
         }
 
     }
     else
     {
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"You have to be holding at least one scoring die to keep your score."
-                                                            message:nil
-                                                           delegate:self
-                                                  cancelButtonTitle:@"OK"
-                                                  otherButtonTitles:nil, nil];
-        alertView.delegate = self;
-        [alertView show];
+        [self displayAlertView:@"You have to be holding at least one scoring die to keep your score."
+                       message:nil
+                  cancelButton:@"OK"
+                   otherButton:nil
+                           tag:0];
     }
 }
 
@@ -151,14 +152,11 @@
     self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
     self.playerOneTotalScoreLabel.text = @"Total Score: 0";
 
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Begin Game!"
-                                                        message:nil
-                                                       delegate:self
-                                              cancelButtonTitle:nil
-                                              otherButtonTitles:@"Roll", nil];
-    alertView.delegate = self;
-    alertView.tag = 1;
-    [alertView show];
+    [self displayAlertView:@"Begin Game!"
+                   message:nil
+              cancelButton:nil
+               otherButton:@"Roll"
+                       tag:1];
 }
 
 - (void)rollDice
@@ -226,27 +224,22 @@
         }
 
         [self clearBoard];
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"FARKLE!"
-                                                           message:nil
-                                                          delegate:self
-                                                 cancelButtonTitle:nil
-                                                 otherButtonTitles:@"Next Player Roll", nil];
-        alertView.delegate = self;
-        alertView.tag = 1;
-        [alertView show];
+
+        [self displayAlertView:@"FARKLE!"
+                       message:nil
+                  cancelButton:nil
+                   otherButton:@"Next Player Roll"
+                           tag:1];
     }
 }
 
 - (void)userWins: (NSString *)winningUser
 {
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:winningUser
-                                                        message:nil
-                                                       delegate:self
-                                              cancelButtonTitle:nil
-                                              otherButtonTitles:@"New Game", nil];
-    alertView.delegate = self;
-    alertView.tag = 2;
-    [alertView show];
+    [self displayAlertView:winningUser
+                   message:nil
+              cancelButton:nil
+               otherButton:@"New Game"
+                       tag:2];
 }
 
 - (void)switchPlayer
@@ -415,6 +408,22 @@
 - (void)incrementSelectedScoringDice:(NSInteger)numberOfNewSelectedDice
 {
     self.selectedScoreingDice = self.selectedScoreingDice + numberOfNewSelectedDice;
+}
+
+- (void)displayAlertView: (NSString *)title message:(NSString *)message
+            cancelButton:(NSString *)cancelButton
+             otherButton:(NSString *)otherButton
+                     tag:(int)tag
+{
+    // add an alert view
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:title
+                                                        message:message
+                                                       delegate:self
+                                              cancelButtonTitle:cancelButton
+                                              otherButtonTitles:otherButton, nil];
+    alertView.delegate = self;
+    alertView.tag = tag;
+    [alertView show];
 }
 
 #pragma mark - DieLabel Delegate Methods
@@ -631,16 +640,11 @@
 
     if (self.numberOfScoringDiceSelected == 6)
     {
-        NSLog(@"Hot Dice!");
-        // add an alert view
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Hot Dice!"
-                                                            message:nil
-                                                           delegate:self
-                                                  cancelButtonTitle:nil
-                                                  otherButtonTitles:@"Roll Again", nil];
-        alertView.tag = 1;
-        alertView.delegate = self;
-        [alertView show];
+        [self displayAlertView:@"Hot Dice!"
+                       message:nil
+                  cancelButton:nil
+                   otherButton:@"Roll Again"
+                           tag:1];
         self.hotDice = YES;
     }
 
