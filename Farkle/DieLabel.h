@@ -14,6 +14,7 @@
 - (void)removeDieFromSelectedDice:(id)die;
 - (void)generateUserScore:(id)selectedDie;
 - (void)clearBoard;
+- (void)getNumberOfDiceSelected;
 
 @end
 

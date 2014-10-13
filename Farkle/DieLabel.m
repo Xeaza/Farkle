@@ -25,13 +25,17 @@
             self.backgroundColor = purpleColor;
             self.selected = YES;
             [self.delegate generateUserScore:self];
+            [self.delegate getNumberOfDiceSelected];
         }
         else
         {
             [self.delegate removeDieFromSelectedDice:self];
-            //[self.delegate clearBoard];
-            //self.selected = NO;
-            //self.backgroundColor = blueColor;
+            // Get the user score again when a user deselects a die so the score will decrement correctly.
+            // Make sure a non selected did is passed. If self is passed the die will be added to the array
+            // of selected dice and the score will not decrement.
+            DieLabel *nonSelectedDie = [[DieLabel alloc] init];
+            nonSelectedDie.selected = NO;
+            [self.delegate generateUserScore:nonSelectedDie];
         }
     });
 }

@@ -25,8 +25,11 @@
 @property NSMutableArray *arrayOfDiceValuesFromSecondRoll;
 
 @property NSInteger numberOfScoringDiceSelected;
+@property NSInteger numberOfDiceSelected;
+
 @property BOOL isPlayerOne;
 @property BOOL hotDice;
+@property BOOL isFirstRoll;
 
 @property BOOL allDiceSelected;
 
@@ -46,25 +49,7 @@
     [self initalizeGame];
 }
 
-- (void)initalizeGame
-{
-    // Make sure the game begins with Player One.
-    // Hide all the labels assoicated with Player Two
-    // Make sure all the scores start as zero
-    self.currentUser.text = @"Player One";
-    self.isPlayerOne = YES;
-    self.hotDice = NO;
-    self.playerTwoBankedScoreLabel.hidden = YES;
-    self.playerTwoTotalScoreLabel.hidden = YES;
-
-    self.playerOneTotalScoreLabel.hidden = NO;
-    self.playerOneBankedScoreLabel.hidden = NO;
-
-    self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
-    self.playerOneTotalScoreLabel.text = @"Total Score: 0";
-
-    // TODO - get labels to correctly hide when initlizing the game. You can see both of them... :/
-}
+#pragma mark - Game Buttons
 
 - (IBAction)onRollButtonPressed:(id)sender
 {
@@ -91,56 +76,88 @@
     [self clearBoard];
     NSInteger bankedScore = 0;
     NSInteger totalScore = 0;
-    if (self.isPlayerOne)
-    {
-        bankedScore = [[self getStringOfScoreFromLabel:self.playerOneBankedScoreLabel.text] integerValue];
-        totalScore = [[self getStringOfScoreFromLabel:self.playerOneTotalScoreLabel.text] integerValue];
-        NSInteger updatedScore = totalScore + bankedScore;
-        self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
-        self.playerOneTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
-    }
-    else
-    {
-        bankedScore = [[self getStringOfScoreFromLabel:self.playerTwoBankedScoreLabel.text] integerValue];
-        totalScore = [[self getStringOfScoreFromLabel:self.playerTwoTotalScoreLabel.text] integerValue];
-        NSInteger updatedScore = totalScore + bankedScore;
-        self.playerTwoBankedScoreLabel.text = @"Banked Score: 0";
-        self.playerTwoTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
-    }
-
-    if (totalScore > 9999)
+    if (self.numberOfDiceSelected > 0)
     {
         if (self.isPlayerOne)
         {
-            [self userWins:@"Player One Wins!"];
+            bankedScore = [[self getStringOfScoreFromLabel:self.playerOneBankedScoreLabel.text] integerValue];
+            totalScore = [[self getStringOfScoreFromLabel:self.playerOneTotalScoreLabel.text] integerValue];
+            NSInteger updatedScore = totalScore + bankedScore;
+            self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
+            self.playerOneTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
         }
         else
         {
-            [self userWins:@"Player Two Wins!"];
+            bankedScore = [[self getStringOfScoreFromLabel:self.playerTwoBankedScoreLabel.text] integerValue];
+            totalScore = [[self getStringOfScoreFromLabel:self.playerTwoTotalScoreLabel.text] integerValue];
+            NSInteger updatedScore = totalScore + bankedScore;
+            self.playerTwoBankedScoreLabel.text = @"Banked Score: 0";
+            self.playerTwoTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
         }
+
+        if (totalScore > 9999)
+        {
+            if (self.isPlayerOne)
+            {
+                [self userWins:@"Player One Wins!"];
+            }
+            else
+            {
+                [self userWins:@"Player Two Wins!"];
+            }
+        }
+        else
+        {
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Next Player's Turn"
+                                                                message:nil
+                                                               delegate:self
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"Roll", nil];
+            alertView.delegate = self;
+            alertView.tag = 1;
+            [alertView show];
+        }
+
     }
     else
     {
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Next Player's Turn"
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"You have to be holding at least one scoring die to keep your score."
                                                             message:nil
                                                            delegate:self
-                                                  cancelButtonTitle:nil
-                                                  otherButtonTitles:@"Roll", nil];
+                                                  cancelButtonTitle:@"OK"
+                                                  otherButtonTitles:nil, nil];
         alertView.delegate = self;
-        alertView.tag = 1;
         [alertView show];
     }
 }
 
-- (void)userWins: (NSString *)winningUser
+#pragma mark - Game Play Methods
+
+- (void)initalizeGame
 {
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:winningUser
+    // Make sure the game begins with Player One.
+    // Hide all the labels assoicated with Player Two
+    // Make sure all the scores start as zero
+    self.currentUser.text = @"Player One";
+    self.isPlayerOne = YES;
+    self.hotDice = NO;
+    self.isFirstRoll = YES;
+    self.playerTwoBankedScoreLabel.hidden = YES;
+    self.playerTwoTotalScoreLabel.hidden = YES;
+
+    self.playerOneTotalScoreLabel.hidden = NO;
+    self.playerOneBankedScoreLabel.hidden = NO;
+
+    self.playerOneBankedScoreLabel.text = @"Banked Score: 0";
+    self.playerOneTotalScoreLabel.text = @"Total Score: 0";
+
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Begin Game!"
                                                         message:nil
                                                        delegate:self
                                               cancelButtonTitle:nil
-                                              otherButtonTitles:@"New Game", nil];
+                                              otherButtonTitles:@"Roll", nil];
     alertView.delegate = self;
-    alertView.tag = 2;
+    alertView.tag = 1;
     [alertView show];
 }
 
@@ -217,6 +234,220 @@
         alertView.delegate = self;
         alertView.tag = 1;
         [alertView show];
+    }
+}
+
+- (void)userWins: (NSString *)winningUser
+{
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:winningUser
+                                                        message:nil
+                                                       delegate:self
+                                              cancelButtonTitle:nil
+                                              otherButtonTitles:@"New Game", nil];
+    alertView.delegate = self;
+    alertView.tag = 2;
+    [alertView show];
+}
+
+- (void)switchPlayer
+{
+    if ([self.currentUser.text isEqualToString:@"Player One"])
+    {
+        self.currentUser.text = @"Player Two";
+        self.isPlayerOne = NO;
+        self.playerOneBankedScoreLabel.hidden = YES;
+        self.playerOneTotalScoreLabel.hidden = YES;
+        self.playerTwoBankedScoreLabel.hidden = NO;
+        self.playerTwoTotalScoreLabel.hidden = NO;
+    }
+    else
+    {
+        self.currentUser.text = @"Player One";
+        self.isPlayerOne = YES;
+        self.playerOneBankedScoreLabel.hidden = NO;
+        self.playerOneTotalScoreLabel.hidden = NO;
+        self.playerTwoBankedScoreLabel.hidden = YES;
+        self.playerTwoTotalScoreLabel.hidden = YES;
+    }
+}
+
+#pragma mark - Game Play Helper Methods
+
+- (void)populateArraysOfSelectedDiceValues: (NSMutableArray *)arrayToFill selectedDie:(NSInteger)numberOnDieSelected
+{
+    int numberOfSelectedOnes   = 0;
+    int numberOfSelectedTwos   = 0;
+    int numberOfSelectedThrees = 0;
+    int numberOfSelectedFours  = 0;
+    int numberOfSelectedFives  = 0;
+    int numberOfSelectedSixes  = 0;
+
+    // Add the number of selected die at the index representing each die in the array self.selecedDie
+    switch (numberOnDieSelected)
+    {
+        case 1:
+            numberOfSelectedOnes = [[arrayToFill objectAtIndex:0] intValue];
+            numberOfSelectedOnes = numberOfSelectedOnes + 1;
+            [arrayToFill replaceObjectAtIndex:0 withObject:[NSNumber numberWithInt:numberOfSelectedOnes]];
+            break;
+        case 2:
+            numberOfSelectedTwos = [[arrayToFill objectAtIndex:1] intValue];
+            numberOfSelectedTwos = numberOfSelectedTwos + 1;
+            [arrayToFill replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:numberOfSelectedTwos]];
+            break;
+        case 3:
+            numberOfSelectedThrees = [[arrayToFill objectAtIndex:2] intValue];
+            numberOfSelectedThrees = numberOfSelectedThrees + 1;
+            [arrayToFill replaceObjectAtIndex:2 withObject:[NSNumber numberWithInt:numberOfSelectedThrees]];
+            break;
+        case 4:
+            numberOfSelectedFours = [[arrayToFill objectAtIndex:3] intValue];
+            numberOfSelectedFours = numberOfSelectedFours + 1;
+            [arrayToFill replaceObjectAtIndex:3 withObject:[NSNumber numberWithInt:numberOfSelectedFours]];
+            break;
+        case 5:
+            numberOfSelectedFives = [[arrayToFill objectAtIndex:4] intValue];
+            numberOfSelectedFives = numberOfSelectedFives + 1;
+            [arrayToFill replaceObjectAtIndex:4 withObject:[NSNumber numberWithInt:numberOfSelectedFives]];
+            break;
+        case 6:
+            numberOfSelectedSixes = [[arrayToFill objectAtIndex:5] intValue];
+            numberOfSelectedSixes = numberOfSelectedSixes + 1;
+            [arrayToFill replaceObjectAtIndex:5 withObject:[NSNumber numberWithInt:numberOfSelectedSixes]];
+            break;
+        default:
+            break;
+    }
+}
+
+- (NSString *)getStringOfScoreFromLabel: (NSString *)labelText
+{
+    // Scan string to find the : and take the value after it (the score)
+    NSMutableArray *substrings = [[NSMutableArray alloc] init];
+    NSScanner *scanner = [NSScanner scannerWithString:labelText];
+    [scanner scanUpToString:@":" intoString:nil]; // Scan all characters before #
+    while(![scanner isAtEnd])
+    {
+        NSString *substring = nil;
+        [scanner scanString:@":" intoString:nil]; // Scan the # character
+        if([scanner scanUpToString:@" " intoString:&substring])
+        {
+            // If the space immediately followed the #, this will be skipped
+            [substrings addObject:substring];
+        }
+    }
+    return [substrings objectAtIndex:0];
+}
+
+- (NSInteger)numberOfSelectedDice
+{
+    int selectedDieCounter = 0;
+    for (DieLabel *die in self.dieOutletCollection)
+    {
+        if (die.selected)
+        {
+            selectedDieCounter ++;
+        }
+    }
+    return selectedDieCounter;
+}
+
+- (BOOL)checkForThreePairs
+{
+    int threePairCounter = 0;
+    // Check for three pairs
+    for (int y = 0; y < self.arrayOfSelectedDiceValues.count; y++)
+    {
+        if ([[self.arrayOfSelectedDiceValues objectAtIndex:y] integerValue] == 2)
+        {
+            threePairCounter++;
+        }
+    }
+    BOOL thereAreThreePairs = NO;
+    if (threePairCounter == 3) {
+        thereAreThreePairs = YES;
+    }
+    return thereAreThreePairs;
+}
+
+- (void)checkIfAllDiceAreSelected
+{
+    long diceSelectedCounter = 0;
+
+    for (NSNumber *selected in self.arrayOfSelectedDiceValues)
+    {
+        if (selected.integerValue > 0 )
+        {
+            diceSelectedCounter = diceSelectedCounter + selected.integerValue;
+        }
+    }
+    if (diceSelectedCounter == 6)
+    {
+        self.allDiceSelected = YES;
+    }
+    else
+    {
+        self.allDiceSelected = NO;
+    }
+}
+
+- (int)getNumberOfNonScoringDiceSelected
+{
+    int nonScoringDiceCounter = 0;
+
+    for (int i = 0; i < self.arrayOfSelectedDiceValues.count; i++)
+    {
+        if (i != 0 && i != 4)
+        {
+            if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 2)
+            {
+                nonScoringDiceCounter = nonScoringDiceCounter + 2;
+            }
+            else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 1)
+            {
+                nonScoringDiceCounter++;
+            }
+        }
+    }
+    return nonScoringDiceCounter;
+}
+
+- (void)incrementSelectedScoringDice:(NSInteger)numberOfNewSelectedDice
+{
+    self.selectedScoreingDice = self.selectedScoreingDice + numberOfNewSelectedDice;
+}
+
+#pragma mark - DieLabel Delegate Methods
+
+-(void)addSelectedDieToDice:(DieLabel *)die
+{
+    [self.dice addObject:die];
+}
+
+-(void)removeDieFromSelectedDice:(DieLabel *)die
+{
+    UIColor *blueColor = [UIColor colorWithRed:(27.0/255.0) green:(228.0/255.0) blue:(255.0/255.0) alpha:1.0];
+
+    if (die.selected)
+    {
+        int index = die.text.intValue-1;
+        if ([self.arrayOfSelectedDiceValues objectAtIndex:index] > 0)
+        {
+            // Decrement amount of selected items at the respective index in the array that keeps track of how many of each number
+            // has been selected
+            int numberOfSelects = [[self.arrayOfSelectedDiceValues objectAtIndex:index] intValue] - 1;
+            [self.arrayOfSelectedDiceValues replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:numberOfSelects]];
+            // TODO decrement the score if a scoreing die is selected and then unselected
+        }
+    }
+    NSLog(@"%@", self.arrayOfSelectedDiceValues);
+
+    die.selected = NO;
+    die.backgroundColor = blueColor;
+
+    if ([self.dice containsObject:die])
+    {
+        [self.dice removeObject:die];
     }
 }
 
@@ -430,145 +661,6 @@
     }
 }
 
-- (void)populateArraysOfSelectedDiceValues: (NSMutableArray *)arrayToFill selectedDie:(NSInteger)numberOnDieSelected
-{
-    int numberOfSelectedOnes   = 0;
-    int numberOfSelectedTwos   = 0;
-    int numberOfSelectedThrees = 0;
-    int numberOfSelectedFours  = 0;
-    int numberOfSelectedFives  = 0;
-    int numberOfSelectedSixes  = 0;
-
-    // Add the number of selected die at the index representing each die in the array self.selecedDie
-    switch (numberOnDieSelected)
-    {
-        case 1:
-            numberOfSelectedOnes = [[arrayToFill objectAtIndex:0] intValue];
-            numberOfSelectedOnes = numberOfSelectedOnes + 1;
-            [arrayToFill replaceObjectAtIndex:0 withObject:[NSNumber numberWithInt:numberOfSelectedOnes]];
-            break;
-        case 2:
-            numberOfSelectedTwos = [[arrayToFill objectAtIndex:1] intValue];
-            numberOfSelectedTwos = numberOfSelectedTwos + 1;
-            [arrayToFill replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:numberOfSelectedTwos]];
-            break;
-        case 3:
-            numberOfSelectedThrees = [[arrayToFill objectAtIndex:2] intValue];
-            numberOfSelectedThrees = numberOfSelectedThrees + 1;
-            [arrayToFill replaceObjectAtIndex:2 withObject:[NSNumber numberWithInt:numberOfSelectedThrees]];
-            break;
-        case 4:
-            numberOfSelectedFours = [[arrayToFill objectAtIndex:3] intValue];
-            numberOfSelectedFours = numberOfSelectedFours + 1;
-            [arrayToFill replaceObjectAtIndex:3 withObject:[NSNumber numberWithInt:numberOfSelectedFours]];
-            break;
-        case 5:
-            numberOfSelectedFives = [[arrayToFill objectAtIndex:4] intValue];
-            numberOfSelectedFives = numberOfSelectedFives + 1;
-            [arrayToFill replaceObjectAtIndex:4 withObject:[NSNumber numberWithInt:numberOfSelectedFives]];
-            break;
-        case 6:
-            numberOfSelectedSixes = [[arrayToFill objectAtIndex:5] intValue];
-            numberOfSelectedSixes = numberOfSelectedSixes + 1;
-            [arrayToFill replaceObjectAtIndex:5 withObject:[NSNumber numberWithInt:numberOfSelectedSixes]];
-            break;
-        default:
-            break;
-    }
-}
-
-- (NSString *)getStringOfScoreFromLabel: (NSString *)labelText
-{
-    // Scan string to find the : and take the value after it (the score)
-    NSMutableArray *substrings = [[NSMutableArray alloc] init];
-    NSScanner *scanner = [NSScanner scannerWithString:labelText];
-    [scanner scanUpToString:@":" intoString:nil]; // Scan all characters before #
-    while(![scanner isAtEnd])
-    {
-        NSString *substring = nil;
-        [scanner scanString:@":" intoString:nil]; // Scan the # character
-        if([scanner scanUpToString:@" " intoString:&substring])
-        {
-            // If the space immediately followed the #, this will be skipped
-            [substrings addObject:substring];
-        }
-    }
-    return [substrings objectAtIndex:0];
-}
-
-- (NSInteger)numberOfSelectedDice
-{
-    int selectedDieCounter = 0;
-    for (DieLabel *die in self.dieOutletCollection)
-    {
-        if (die.selected)
-        {
-            selectedDieCounter ++;
-        }
-    }
-    return selectedDieCounter;
-}
-
-- (BOOL)checkForThreePairs
-{
-    int threePairCounter = 0;
-    // Check for three pairs
-    for (int y = 0; y < self.arrayOfSelectedDiceValues.count; y++)
-    {
-        if ([[self.arrayOfSelectedDiceValues objectAtIndex:y] integerValue] == 2)
-        {
-            threePairCounter++;
-        }
-    }
-    BOOL thereAreThreePairs = NO;
-    if (threePairCounter == 3) {
-        thereAreThreePairs = YES;
-    }
-    return thereAreThreePairs;
-}
-
-- (void)checkIfAllDiceAreSelected
-{
-    long diceSelectedCounter = 0;
-
-    for (NSNumber *selected in self.arrayOfSelectedDiceValues)
-    {
-        if (selected.integerValue > 0 )
-        {
-            diceSelectedCounter = diceSelectedCounter + selected.integerValue;
-        }
-    }
-    if (diceSelectedCounter == 6)
-    {
-        self.allDiceSelected = YES;
-    }
-    else
-    {
-        self.allDiceSelected = NO;
-    }
-}
-
-- (int)getNumberOfNonScoringDiceSelected
-{
-    int nonScoringDiceCounter = 0;
-
-    for (int i = 0; i < self.arrayOfSelectedDiceValues.count; i++)
-    {
-        if (i != 0 && i != 4)
-        {
-            if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 2)
-            {
-                nonScoringDiceCounter = nonScoringDiceCounter + 2;
-            }
-            else if ([[self.arrayOfSelectedDiceValues objectAtIndex:i] integerValue] == 1)
-            {
-                nonScoringDiceCounter++;
-            }
-        }
-    }
-    return nonScoringDiceCounter;
-}
-
 - (void)clearBoard
 {
     UIColor *blueColor = [UIColor colorWithRed:(27.0/255.0) green:(228.0/255.0) blue:(255.0/255.0) alpha:1.0];
@@ -582,74 +674,31 @@
     }
 }
 
-- (void)incrementSelectedScoringDice:(NSInteger)numberOfNewSelectedDice
+- (void)getNumberOfDiceSelected
 {
-    self.selectedScoreingDice = self.selectedScoreingDice + numberOfNewSelectedDice;
-}
-
--(void)addSelectedDieToDice:(DieLabel *)die
-{
-    [self.dice addObject:die];
-}
-
--(void)removeDieFromSelectedDice:(DieLabel *)die
-{
-    UIColor *blueColor = [UIColor colorWithRed:(27.0/255.0) green:(228.0/255.0) blue:(255.0/255.0) alpha:1.0];
-
-    if (die.selected)
+    self.numberOfDiceSelected = 0;
+    for (DieLabel *die in self.dieOutletCollection)
     {
-        int index = die.text.intValue-1;
-        if ([self.arrayOfSelectedDiceValues objectAtIndex:index] > 0)
+        if (die.selected)
         {
-            // Decrement amount of selected items at the respective index in the array that keeps track of how many of each number
-            // has been selected
-            int numberOfSelects = [[self.arrayOfSelectedDiceValues objectAtIndex:index] intValue] - 1;
-            [self.arrayOfSelectedDiceValues replaceObjectAtIndex:index withObject:[NSNumber numberWithInt:numberOfSelects]];
-            // TODO decrement the score if a scoreing die is selected and then unselected
+            self.numberOfDiceSelected++;
         }
     }
-    NSLog(@"%@", self.arrayOfSelectedDiceValues);
-
-    die.selected = NO;
-    die.backgroundColor = blueColor;
-
-    if ([self.dice containsObject:die])
-    {
-        [self.dice removeObject:die];
-    }
 }
 
-- (void)switchPlayer
-{
-    if ([self.currentUser.text isEqualToString:@"Player One"])
-    {
-        self.currentUser.text = @"Player Two";
-        self.isPlayerOne = NO;
-        self.playerOneBankedScoreLabel.hidden = YES;
-        self.playerOneTotalScoreLabel.hidden = YES;
-        self.playerTwoBankedScoreLabel.hidden = NO;
-        self.playerTwoTotalScoreLabel.hidden = NO;
-    }
-    else
-    {
-        self.currentUser.text = @"Player One";
-        self.isPlayerOne = YES;
-        self.playerOneBankedScoreLabel.hidden = NO;
-        self.playerOneTotalScoreLabel.hidden = NO;
-        self.playerTwoBankedScoreLabel.hidden = YES;
-        self.playerTwoTotalScoreLabel.hidden = YES;
-    }
-}
+#pragma mark - UIAlertViewDelegate Methods
 
 -(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
     if (alertView.tag == 1)
     {
-        if (!self.hotDice)
+        if (!self.hotDice && !self.isFirstRoll)
         {
             [self switchPlayer];
         }
         self.hotDice = NO;
+        self.isFirstRoll = NO;
+
         [self rollDice];
         [self checkForFarkle];
     }
@@ -659,9 +708,9 @@
     }
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
+//- (void)didReceiveMemoryWarning
+//{
+//    [super didReceiveMemoryWarning];
+//    // Dispose of any resources that can be recreated.
+//}
 @end
