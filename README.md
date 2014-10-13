@@ -1,7 +1,8 @@
 ## Farkle 
 #### Wed 10/08/2014
 
-Farkle is a dice based game. A little like Yahtzee 
-http://en.wikipedia.org/wiki/Farkle
+[Farkle](http://en.wikipedia.org/wiki/Farkle) is a dice based game. 
+A little like Yahtzee 
 
-Currently the game is not finished. 
+
+Status: *Currently the game is not finished.* 
