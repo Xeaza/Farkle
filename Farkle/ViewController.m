@@ -26,6 +26,7 @@
 
 @property NSInteger numberOfScoringDiceSelected;
 @property BOOL isPlayerOne;
+@property BOOL hotDice;
 
 @property BOOL allDiceSelected;
 
@@ -52,6 +53,7 @@
     // Make sure all the scores start as zero
     self.currentUser.text = @"Player One";
     self.isPlayerOne = YES;
+    self.hotDice = NO;
     self.playerTwoBankedScoreLabel.hidden = YES;
     self.playerTwoTotalScoreLabel.hidden = YES;
 
@@ -106,7 +108,7 @@
         self.playerTwoTotalScoreLabel.text   = [NSString stringWithFormat:@"Total Score: %li", (long)updatedScore];
     }
 
-    if (totalScore > 999)
+    if (totalScore > 9999)
     {
         if (self.isPlayerOne)
         {
@@ -139,6 +141,7 @@
                                               otherButtonTitles:@"New Game", nil];
     alertView.delegate = self;
     alertView.tag = 2;
+    [alertView show];
 }
 
 - (void)rollDice
@@ -407,6 +410,7 @@
         alertView.tag = 1;
         alertView.delegate = self;
         [alertView show];
+        self.hotDice = YES;
     }
 
     bankScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixesScore;
@@ -641,8 +645,13 @@
 {
     if (alertView.tag == 1)
     {
-        [self switchPlayer];
+        if (!self.hotDice)
+        {
+            [self switchPlayer];
+        }
+        self.hotDice = NO;
         [self rollDice];
+        [self checkForFarkle];
     }
     else if (alertView.tag == 2)
     {

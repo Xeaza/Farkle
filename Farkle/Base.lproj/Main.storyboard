@@ -446,7 +446,7 @@
                         <outlet property="playerOneBankedScoreLabel" destination="vYJ-vc-iNw" id="fMp-hb-ZCB"/>
                         <outlet property="playerOneTotalScoreLabel" destination="czG-Ia-i0X" id="hne-na-HU2"/>
                         <outlet property="playerTwoBankedScoreLabel" destination="PLE-7n-6dx" id="Oa9-d9-fHb"/>
-                        <outlet property="playerTwoTotalScoreLabel" destination="czG-Ia-i0X" id="ObN-t0-wkM"/>
+                        <outlet property="playerTwoTotalScoreLabel" destination="DXE-ed-kxe" id="1q4-Af-l3y"/>
                         <outletCollection property="dieOutletCollection" destination="k3v-Cm-WcI" id="tvI-Al-O0d"/>
                         <outletCollection property="dieOutletCollection" destination="4eP-1G-fzZ" id="7TT-dk-GSR"/>
                         <outletCollection property="dieOutletCollection" destination="40i-pb-jCT" id="NjS-21-a8N"/>
